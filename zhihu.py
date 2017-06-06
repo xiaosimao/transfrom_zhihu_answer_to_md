@@ -87,11 +87,11 @@ class ZhiHu(object):
         file_name = u'%s--%s的回答[%d].md' % (question_title, author_name, answer_id)
         folder_name = u'%s' % (question_title)
 
-        if not os.path.exists(os.path.join(os.getcwd(), folder_name)):
+        if not os.path.exists(os.path.join(os.getcwd(), folder_name.encode('utf-8'))):
             os.mkdir(folder_name)
-        os.chdir(folder_name)
+            os.chdir(folder_name)
 
-        f = open(file_name, "wt")
+        f = open(os.path.join(os.getcwd().encode('utf-8'), folder_name.encode('utf-8'),file_name.encode('utf-8')), "wt")
         f.write("-" * 40 + "\n")
         origin_url = 'https://www.zhihu.com/question/{}/answer/{}'.format(question_id, answer_id)
         f.write("## 本答案原始链接: " + origin_url + "\n")
