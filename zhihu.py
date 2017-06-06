@@ -7,7 +7,6 @@ import json
 import requests
 import html2text
 from parse_content import parse
-from get_ip import get_random_proxy
 
 """
 just for study and fun
@@ -15,9 +14,10 @@ Talk is cheap
 show me your code
 """
 
+
 class ZhiHu(object):
     def __init__(self):
-        pass
+        self.request_content = None
 
     def request(self, url, retry_times=10):
         header = {
@@ -25,24 +25,17 @@ class ZhiHu(object):
             'authorization': 'oauth c3cef7c66a1843f8b3a9e6a1e3160e20',
             'Host': 'www.zhihu.com'
         }
-        content = None
         times = 0
-        while retry_times>0:
+        while retry_times > 0:
             times += 1
-            print 'request %s, times: %d' %(url, times)
+            print 'request %s, times: %d' % (url, times)
             try:
-                ip = get_random_proxy()
-                if ip:
-                    proxy = {
-                        'http': 'http://%s' % ip,
-                        'https': 'http://%s' % ip
-                    }
-                    content = requests.get(url, headers=header, proxies=proxy, timeout=10).content
+                self.request_content = requests.get(url, headers=header, timeout=10).content
             except Exception, e:
                 print e
                 retry_times -= 1
             else:
-                return content
+                return self.request_content
 
     def get_all_answer_content(self, question_id, flag=2):
         first_url_format = 'https://www.zhihu.com/api/v4/questions/{}/answers?sort_by=default&include=data%5B%2A%5D.is_normal%2Cis_collapsed%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Cmark_infos%2Ccreated_time%2Cupdated_time%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cupvoted_followees%3Bdata%5B%2A%5D.author.follower_count%2Cbadge%5B%3F%28type%3Dbest_answerer%29%5D.topics&limit=20&offset=3'
@@ -67,14 +60,14 @@ class ZhiHu(object):
         if html_content:
             all_content['main_content'] = html_content
         else:
-            raise  ValueError('failed 10 times, quit......')
+            raise ValueError('failed 10 times, quit......')
 
         ajax_answer_url = 'https://www.zhihu.com/api/v4/answers/{}'.format(answer_id)
         ajax_content = self.request(ajax_answer_url)
         if ajax_content:
             all_content['ajax_content'] = json.loads(ajax_content)
         else:
-            raise  ValueError('failed 10 times, quit......')
+            raise ValueError('failed 10 times, quit......')
 
         self.parse_content(all_content, flag, )
 
@@ -91,10 +84,10 @@ class ZhiHu(object):
         vote_up_count = data['vote_up_count']
         create_time = data['create_time']
 
-        file_name = u'%s--%s的回答[%d].md' % (question_title, author_name,answer_id)
+        file_name = u'%s--%s的回答[%d].md' % (question_title, author_name, answer_id)
         folder_name = u'%s' % (question_title)
 
-        if not os.path.exists(os.path.join(os.getcwd(),folder_name)):
+        if not os.path.exists(os.path.join(os.getcwd(), folder_name)):
             os.mkdir(folder_name)
         os.chdir(folder_name)
 
