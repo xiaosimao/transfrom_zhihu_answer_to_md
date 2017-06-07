@@ -4,6 +4,8 @@
 import os
 import re
 import json
+import urllib
+import urlparse
 import requests
 import html2text
 from parse_content import parse
@@ -17,25 +19,28 @@ show me your code
 
 class ZhiHu(object):
     def __init__(self):
-        self.request_content = None
+        pass
 
     def request(self, url, retry_times=10):
+        host = urlparse.urlparse(url).netloc
         header = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
             'authorization': 'oauth c3cef7c66a1843f8b3a9e6a1e3160e20',
-            'Host': 'www.zhihu.com'
+            'Host': host
         }
+        content = None
         times = 0
         while retry_times > 0:
             times += 1
             print 'request %s, times: %d' % (url, times)
             try:
-                self.request_content = requests.get(url, headers=header, timeout=10).content
+
+                content = requests.get(url, headers=header, timeout=10).content
             except Exception, e:
                 print e
                 retry_times -= 1
             else:
-                return self.request_content
+                return content
 
     def get_all_answer_content(self, question_id, flag=2):
         first_url_format = 'https://www.zhihu.com/api/v4/questions/{}/answers?sort_by=default&include=data%5B%2A%5D.is_normal%2Cis_collapsed%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Cmark_infos%2Ccreated_time%2Cupdated_time%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cupvoted_followees%3Bdata%5B%2A%5D.author.follower_count%2Cbadge%5B%3F%28type%3Dbest_answerer%29%5D.topics&limit=20&offset=3'
@@ -115,11 +120,28 @@ class ZhiHu(object):
             if i != " ":
                 text = text.replace(i, i.strip())
         text = text.replace('_ _', '')
-
+        text = text.replace('_b.', '_r.')
         # 图片
         r = re.findall(r'!\[\]\((?:.*?)\)', text)
         for i in r:
+
             text = text.replace(i, i + "\n\n")
+
+            cwd = os.getcwd()
+            folder_name = '%s/image' % (cwd)
+
+            if not os.path.exists(folder_name):
+                os.mkdir(folder_name)
+            img_url = re.findall('\((.*)\)', i)[0]
+            save_name = img_url.split('/')[-1]
+            pic_file_name = '%s/%s' % (folder_name,save_name)
+
+            try:
+                urllib.urlretrieve(img_url, pic_file_name)
+            except Exception, e:
+                print e
+            else:
+                text = text.replace(img_url, pic_file_name)
 
         f.write(text)
 
@@ -128,8 +150,8 @@ class ZhiHu(object):
 
 if __name__ == '__main__':
     zhihu = ZhiHu()
-    url = 'https://www.zhihu.com/question/27621722/answer/105331078'
-    zhihu.get_single_answer_content(url)
+    # url = 'https://www.zhihu.com/question/27621722/answer/105331078'
+    # zhihu.get_single_answer_content(url)
 
-    # question_id = '27621722'
-    # zhihu.get_all_answer_content(question_id)
+    question_id = '29470294'
+    zhihu.get_all_answer_content(question_id)
