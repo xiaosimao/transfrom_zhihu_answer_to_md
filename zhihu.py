@@ -43,15 +43,18 @@ class ZhiHu(object):
                 return content
 
     def get_all_answer_content(self, question_id, flag=2):
-        first_url_format = 'https://www.zhihu.com/api/v4/questions/{}/answers?sort_by=default&include=data%5B%2A%5D.is_normal%2Cis_collapsed%2Ccollapse_reason%2Cis_sticky%2Ccollapsed_by%2Csuggest_edit%2Ccomment_count%2Ccan_comment%2Ccontent%2Ceditable_content%2Cvoteup_count%2Creshipment_settings%2Ccomment_permission%2Cmark_infos%2Ccreated_time%2Cupdated_time%2Crelationship.is_authorized%2Cis_author%2Cvoting%2Cis_thanked%2Cis_nothelp%2Cupvoted_followees%3Bdata%5B%2A%5D.author.follower_count%2Cbadge%5B%3F%28type%3Dbest_answerer%29%5D.topics&limit=20&offset=3'
+        first_url_format = 'https://www.zhihu.com/api/v4/questions/{}/answers?include=data[*].content,voteup_count,created_time&offset=0&limit=20&sort_by=default'
         first_url = first_url_format.format(question_id)
         response = self.request(first_url)
         if response:
             contents = json.loads(response)
             print contents.get('paging').get('is_end')
+            for content in contents.get('data'):
+
+                self.parse_content(content, flag)
+
             while not contents.get('paging').get('is_end'):
-                for content in contents.get('data'):
-                    self.parse_content(content, flag)
+
                 next_page_url = contents.get('paging').get('next').replace('http', 'https')
                 contents = json.loads(self.request(next_page_url))
         else:
@@ -156,5 +159,5 @@ if __name__ == '__main__':
     # zhihu.get_single_answer_content(url)
 
     # 29470294
-    question_id = '29470294'
+    question_id = '47262986'
     zhihu.get_all_answer_content(question_id)
