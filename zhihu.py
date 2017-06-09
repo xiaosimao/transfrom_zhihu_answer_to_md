@@ -49,14 +49,16 @@ class ZhiHu(object):
         if response:
             contents = json.loads(response)
             print contents.get('paging').get('is_end')
-            for content in contents.get('data'):
+            if contents.get('paging').get('is_end'):
+                for content in contents.get('data'):
+                    self.parse_content(content, flag)
+            else:
+                while not contents.get('paging').get('is_end'):
+                    for content in contents.get('data'):
+                        self.parse_content(content, flag)
+                    next_page_url = contents.get('paging').get('next').replace('http', 'https')
+                    contents = json.loads(self.request(next_page_url))
 
-                self.parse_content(content, flag)
-
-            while not contents.get('paging').get('is_end'):
-
-                next_page_url = contents.get('paging').get('next').replace('http', 'https')
-                contents = json.loads(self.request(next_page_url))
         else:
             raise ValueError('failed 10 times, quit......')
 
@@ -159,5 +161,5 @@ if __name__ == '__main__':
     # zhihu.get_single_answer_content(url)
 
     # 29470294
-    question_id = '47262986'
+    question_id = '24400664'
     zhihu.get_all_answer_content(question_id)
