@@ -82,26 +82,28 @@ class ZhiHu(object):
 
     def transform_to_markdown(self, data):
         content = data['content']
-        author_name = data['author_name']
+        author_name = data['author_name'].encode('utf-8')
         answer_id = data['answer_id']
         question_id = data['question_id']
-        question_title = data['question_title']
+        question_title = data['question_title'].encode('utf-8')
+
         vote_up_count = data['vote_up_count']
         create_time = data['create_time']
 
-        file_name = u'%s--%s的回答[%d].md' % (question_title, author_name, answer_id)
-        folder_name = u'%s' % (question_title)
+        file_name = unicode('%s--%s的回答[%d].md' % (question_title, author_name, answer_id), 'utf-8')
+
+        folder_name = unicode('%s' % (question_title), 'utf-8')
 
         if not os.path.exists(os.path.join(os.getcwd(), folder_name.encode('utf-8'))):
             os.mkdir(folder_name)
-            os.chdir(folder_name)
 
-        f = open(os.path.join(os.getcwd().encode('utf-8'), folder_name.encode('utf-8'),file_name.encode('utf-8')), "wt")
+        f = open(os.path.join(os.getcwd(), folder_name.encode('utf-8'), file_name.encode('utf-8','ignore')),"wt")
+
         f.write("-" * 40 + "\n")
         origin_url = 'https://www.zhihu.com/question/{}/answer/{}'.format(question_id, answer_id)
         f.write("## 本答案原始链接: " + origin_url + "\n")
-        f.write("### question_title: " + question_title.encode('utf-8') + "\n")
-        f.write("### Author_Name: " + author_name.encode('utf-8') + "\n")
+        f.write("### question_title: " + question_title + "\n")
+        f.write("### Author_Name: " + author_name + "\n")
         f.write("### Answer_ID: %d" % answer_id + "\n")
         f.write("### Question_ID %d: " % question_id + "\n")
         f.write("### VoteCount: %s" % vote_up_count + "\n")
@@ -134,7 +136,7 @@ class ZhiHu(object):
                 os.mkdir(folder_name)
             img_url = re.findall('\((.*)\)', i)[0]
             save_name = img_url.split('/')[-1]
-            pic_file_name = '%s/%s' % (folder_name,save_name)
+            pic_file_name = '%s/%s' % (folder_name, save_name)
 
             try:
                 urllib.urlretrieve(img_url, pic_file_name)
@@ -153,5 +155,6 @@ if __name__ == '__main__':
     # url = 'https://www.zhihu.com/question/27621722/answer/105331078'
     # zhihu.get_single_answer_content(url)
 
+    # 29470294
     question_id = '29470294'
     zhihu.get_all_answer_content(question_id)
